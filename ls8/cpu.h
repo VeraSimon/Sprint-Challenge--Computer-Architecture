@@ -32,8 +32,8 @@ struct cpu
     // ram
     unsigned char ram[MAX_RAM];
 
-    // TODO: something from the spec in the CPU
-    // FL;
+    // flags
+    unsigned char FL;
 };
 
 // ### Instructions ### //
@@ -43,6 +43,7 @@ struct cpu
 
 //# ALU #//
 #define ADD 0b10100000
+#define CMP 0b10100111
 #define DIV 0b10100011
 #define MOD 0b10100100
 #define MUL 0b10100010
@@ -50,6 +51,9 @@ struct cpu
 
 //# PC mutators #//
 #define CALL 0b01010000
+#define JEQ 0b01010101 // TODO: Implement JEQ
+#define JMP 0b01010100 // TODO: Implement JMP
+#define JNE 0b01010110 // TODO: Implement JNE
 #define RET 0b00010001
 
 //# Other #//
@@ -63,6 +67,7 @@ struct cpu
 enum alu_op
 {
     ALU_ADD = ADD,
+    ALU_CMP = CMP,
     ALU_DIV = DIV,
     ALU_MOD = MOD,
     ALU_MUL = MUL,

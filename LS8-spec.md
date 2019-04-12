@@ -228,6 +228,8 @@ Machine code:
 
 *This is an instruction handled by the ALU.*
 
+`FL` bits: `00000LGE`
+
 `CMP registerA registerB`
 
 Compare the values in two registers.
@@ -286,7 +288,7 @@ Halt the CPU (and exit the emulator).
 
 Machine code:
 ```
-00000001 
+00000001
 01
 ```
 

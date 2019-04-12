@@ -103,6 +103,29 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
         cpu->registers[regA] += cpu->registers[regB];
         break;
 
+    case ALU_CMP:
+        // clear the 3 CMP bits
+        cpu->FL &= ~0b111;
+        // set the CMP bits
+        if (cpu->registers[regA] < cpu->registers[regB])
+        {
+            cpu->FL |= 1 << 3;
+        }
+        else if (cpu->registers[regA] > cpu->registers[regB])
+        {
+            cpu->FL |= 1 << 2;
+        }
+        else
+        {
+            cpu->FL |= 1 << 1;
+        }
+
+        if (debug)
+        {
+            printf("cpu->FL: %X\n", cpu->FL);
+        }
+        break;
+
     case ALU_DIV:
         if (regB == 0)
         {
@@ -225,6 +248,10 @@ void cpu_run(struct cpu *cpu)
             cpu->PC = cpu->registers[operandA];
             break;
 
+        case CMP:
+            alu(cpu, CMP, operandA, operandB);
+            break;
+
         case DIV:
             alu(cpu, DIV, operandA, operandB);
             break;
@@ -277,7 +304,11 @@ void cpu_run(struct cpu *cpu)
         // 6. Move the PC to the next instruction.
         switch (cpu->IR)
         {
+        // Don't increment cpu->PC for instructions that do it themselves
         case CALL:
+        case JEQ:
+        case JMP:
+        case JNE:
         case RET:
             break;
 
@@ -300,6 +331,6 @@ void cpu_init(struct cpu *cpu)
     memset(cpu->registers, 0, sizeof(char) * MAX_REGISTERS);
     cpu->registers[SP] = IVT;
     cpu->PC = 0;
-    // cpu->FL = 0;
+    cpu->FL = 0;
     memset(cpu->ram, 0, sizeof(char) * MAX_RAM);
 }
