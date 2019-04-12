@@ -109,20 +109,20 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
         // set the CMP bits
         if (cpu->registers[regA] < cpu->registers[regB])
         {
-            cpu->FL |= 1 << 3;
+            cpu->FL |= 1 << 2;
         }
         else if (cpu->registers[regA] > cpu->registers[regB])
         {
-            cpu->FL |= 1 << 2;
+            cpu->FL |= 1 << 1;
         }
         else
         {
-            cpu->FL |= 1 << 1;
+            cpu->FL |= 1 << 0;
         }
 
         if (debug)
         {
-            printf("cpu->FL: %X\n", cpu->FL);
+            printf("Flags: 0x%X\n", cpu->FL);
         }
         break;
 
@@ -261,9 +261,13 @@ void cpu_run(struct cpu *cpu)
             break;
 
         case JEQ:
-            if (cpu->FL << 7 == 1)
+            if ((cpu->FL & 0b00000001) == 1)
             {
                 cpu->PC = cpu->registers[operandA];
+            }
+            else
+            {
+                cpu->PC += operands + 1;
             }
             break;
 
@@ -272,9 +276,13 @@ void cpu_run(struct cpu *cpu)
             break;
 
         case JNE:
-            if (cpu->FL << 7 == 0)
+            if ((cpu->FL & 0b00000001) == 0)
             {
                 cpu->PC = cpu->registers[operandA];
+            }
+            else
+            {
+                cpu->PC += operands + 1;
             }
             break;
 
