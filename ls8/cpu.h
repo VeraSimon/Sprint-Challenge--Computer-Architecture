@@ -33,6 +33,7 @@ struct cpu
     unsigned char ram[MAX_RAM];
 
     // flags
+    // FL bits: 00000LGE
     unsigned char FL;
 };
 
@@ -51,9 +52,9 @@ struct cpu
 
 //# PC mutators #//
 #define CALL 0b01010000
-#define JEQ 0b01010101 // TODO: Implement JEQ
-#define JMP 0b01010100 // TODO: Implement JMP
-#define JNE 0b01010110 // TODO: Implement JNE
+#define JEQ 0b01010101
+#define JMP 0b01010100
+#define JNE 0b01010110
 #define RET 0b00010001
 
 //# Other #//
