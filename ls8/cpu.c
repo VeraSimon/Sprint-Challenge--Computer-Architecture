@@ -103,6 +103,37 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
         cpu->registers[regA] += cpu->registers[regB];
         break;
 
+    case ALU_AND:
+        cpu->registers[regA] &= cpu->registers[regB];
+        break;
+
+    case ALU_CMP:
+        // clear the 3 CMP bits
+        cpu->FL &= ~0b111;
+        // set the CMP bits
+        if (cpu->registers[regA] < cpu->registers[regB])
+        {
+            cpu->FL |= 1 << 2;
+        }
+        else if (cpu->registers[regA] > cpu->registers[regB])
+        {
+            cpu->FL |= 1 << 1;
+        }
+        else
+        {
+            cpu->FL |= 1 << 0;
+        }
+
+        if (debug)
+        {
+            printf("Flags: 0x%X\n", cpu->FL);
+        }
+        break;
+
+    case ALU_DEC:
+        cpu->registers[regA]--;
+        break;
+
     case ALU_DIV:
         if (regB == 0)
         {
@@ -113,6 +144,10 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
         {
             cpu->registers[regA] /= cpu->registers[regB];
         }
+        break;
+
+    case ALU_INC:
+        cpu->registers[regA]++;
         break;
 
     case ALU_MOD:
@@ -131,8 +166,28 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
         cpu->registers[regA] *= cpu->registers[regB];
         break;
 
+    case ALU_NOT:
+        cpu->registers[regA] = ~cpu->registers[regA];
+        break;
+
+    case ALU_OR:
+        cpu->registers[regA] |= cpu->registers[regB];
+        break;
+
+    case ALU_SHL:
+        cpu->registers[regA] = cpu->registers[regA] << cpu->registers[regB];
+        break;
+
+    case ALU_SHR:
+        cpu->registers[regA] = cpu->registers[regA] >> cpu->registers[regB];
+        break;
+
     case ALU_SUB:
         cpu->registers[regA] -= cpu->registers[regB];
+        break;
+
+    case ALU_XOR:
+        cpu->registers[regA] ^= cpu->registers[regB];
         break;
 
     default:
@@ -220,9 +275,21 @@ void cpu_run(struct cpu *cpu)
             alu(cpu, ADD, operandA, operandB);
             break;
 
+        case AND:
+            alu(cpu, AND, operandA, operandB);
+            break;
+
         case CALL:
             cpu_stack_push(cpu, cpu->PC + operands + 1);
             cpu->PC = cpu->registers[operandA];
+            break;
+
+        case CMP:
+            alu(cpu, CMP, operandA, operandB);
+            break;
+
+        case DEC:
+            alu(cpu, DEC, operandA, operandB);
             break;
 
         case DIV:
@@ -231,6 +298,36 @@ void cpu_run(struct cpu *cpu)
 
         case HLT:
             running = 0;
+            break;
+
+        case INC:
+            alu(cpu, INC, operandA, operandB);
+            break;
+
+        case JEQ:
+            if ((cpu->FL & 0b00000001) == 1)
+            {
+                cpu->PC = cpu->registers[operandA];
+            }
+            else
+            {
+                cpu->PC += operands + 1;
+            }
+            break;
+
+        case JMP:
+            cpu->PC = cpu->registers[operandA];
+            break;
+
+        case JNE:
+            if ((cpu->FL & 0b00000001) == 0)
+            {
+                cpu->PC = cpu->registers[operandA];
+            }
+            else
+            {
+                cpu->PC += operands + 1;
+            }
             break;
 
         case LDI:
@@ -243,6 +340,14 @@ void cpu_run(struct cpu *cpu)
 
         case MUL:
             alu(cpu, MUL, operandA, operandB);
+            break;
+
+        case NOT:
+            alu(cpu, NOT, operandA, operandB);
+            break;
+
+        case OR:
+            alu(cpu, OR, operandA, operandB);
             break;
 
         case POP:
@@ -265,8 +370,20 @@ void cpu_run(struct cpu *cpu)
             cpu->PC = *cpu_stack_pop(cpu);
             break;
 
+        case SHL:
+            alu(cpu, SHL, operandA, operandB);
+            break;
+
+        case SHR:
+            alu(cpu, SHR, operandA, operandB);
+            break;
+
         case SUB:
             alu(cpu, SUB, operandA, operandB);
+            break;
+
+        case XOR:
+            alu(cpu, XOR, operandA, operandB);
             break;
 
         default:
@@ -277,7 +394,11 @@ void cpu_run(struct cpu *cpu)
         // 6. Move the PC to the next instruction.
         switch (cpu->IR)
         {
+        // Don't increment cpu->PC for instructions that do it themselves
         case CALL:
+        case JEQ:
+        case JMP:
+        case JNE:
         case RET:
             break;
 
@@ -300,6 +421,6 @@ void cpu_init(struct cpu *cpu)
     memset(cpu->registers, 0, sizeof(char) * MAX_REGISTERS);
     cpu->registers[SP] = IVT;
     cpu->PC = 0;
-    // cpu->FL = 0;
+    cpu->FL = 0;
     memset(cpu->ram, 0, sizeof(char) * MAX_RAM);
 }
